@@ -1757,8 +1757,9 @@ const (
 
 func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFlags) {
 
-    // findme
-	p.print(fmt.Sprintf("__INST(%d, ", expr.Loc.Start))
+	// findme
+	// instrument
+	p.print(fmt.Sprintf("__INST(%d, null, ", expr.Loc.Start))
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
@@ -2958,8 +2959,8 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 		panic(fmt.Sprintf("Unexpected expression of type %T", expr.Data))
 	}
 
-    // findme
-    p.print(")")
+	// findme
+	p.print(")")
 	// p.print(fmt.Sprintf("/**(end-ex-%d)*/", expr.Loc.Start))
 }
 
@@ -3363,11 +3364,15 @@ func (p *printer) printBody(body js_ast.Stmt) {
 }
 
 func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
-    // findme
+	// findme
 	// p.print(fmt.Sprintf("/**{block-st-%d}*/", loc.Start))
 
 	p.addSourceMapping(loc)
 	p.print("{")
+	p.printNewline()
+
+	// instrument
+	p.print(fmt.Sprintf("__INST(%d, %d);", loc.Start, block.CloseBraceLoc.Start))
 	p.printNewline()
 
 	p.options.Indent++
@@ -3384,7 +3389,7 @@ func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
 	}
 	p.print("}")
 
-    // findme
+	// findme
 	// p.print(fmt.Sprintf("/**{block-end-%d}*/", loc.Start))
 }
 
@@ -3700,8 +3705,11 @@ const (
 
 func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
 
-    // findme
+	// findme
 	// p.print(fmt.Sprintf("/**(start-st-%d)*/", stmt.Loc.Start))
+	
+	// instrument
+	p.print(fmt.Sprintf("__INST(%d, null);", stmt.Loc.Start))
 
 	switch s := stmt.Data.(type) {
 	case *js_ast.SComment:
@@ -4470,7 +4478,7 @@ func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
 		panic(fmt.Sprintf("Unexpected statement of type %T", stmt.Data))
 	}
 
-    // findme
+	// findme
 	// p.print(fmt.Sprintf("/**(end-st-%d)*/", stmt.Loc.Start))
 }
 

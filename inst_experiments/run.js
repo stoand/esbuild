@@ -1,7 +1,7 @@
-let offsetsCovered = new Set();
+let offsetsCovered = [];
 
-function __INST(offset, expr) {
-    offsetsCovered.add(offset);
+function __INST(start, end, expr = undefined) {
+    offsetsCovered.push([start, end]);
     return expr;
 }
 
