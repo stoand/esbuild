@@ -866,6 +866,7 @@ func (p *printer) printFnArgs(args []js_ast.Arg, opts fnArgsOpts) {
 func (p *printer) printFn(fn js_ast.Fn) {
 	p.printFnArgs(fn.Args, fnArgsOpts{hasRestArg: fn.HasRestArg})
 	p.printSpace()
+	// fmt.Sprintf("value: %d", fn.OpenParenLoc.Start)
 	p.printBlock(fn.Body.Loc, fn.Body.Block)
 }
 
@@ -1755,6 +1756,10 @@ const (
 )
 
 func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFlags) {
+
+    // findme
+	p.print(fmt.Sprintf("__INST(%d, ", expr.Loc.Start))
+
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
 	// This makes the output a little tighter if people construct bit masks in
@@ -2952,6 +2957,10 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	default:
 		panic(fmt.Sprintf("Unexpected expression of type %T", expr.Data))
 	}
+
+    // findme
+    p.print(")")
+	// p.print(fmt.Sprintf("/**(end-ex-%d)*/", expr.Loc.Start))
 }
 
 // The handling of binary expressions is convoluted because we're using
@@ -3354,6 +3363,9 @@ func (p *printer) printBody(body js_ast.Stmt) {
 }
 
 func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
+    // findme
+	// p.print(fmt.Sprintf("/**{block-st-%d}*/", loc.Start))
+
 	p.addSourceMapping(loc)
 	p.print("{")
 	p.printNewline()
@@ -3371,6 +3383,9 @@ func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
 		p.addSourceMapping(block.CloseBraceLoc)
 	}
 	p.print("}")
+
+    // findme
+	// p.print(fmt.Sprintf("/**{block-end-%d}*/", loc.Start))
 }
 
 func wrapToAvoidAmbiguousElse(s js_ast.S) bool {
@@ -3684,6 +3699,10 @@ const (
 )
 
 func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
+
+    // findme
+	// p.print(fmt.Sprintf("/**(start-st-%d)*/", stmt.Loc.Start))
+
 	switch s := stmt.Data.(type) {
 	case *js_ast.SComment:
 		text := s.Text
@@ -4450,6 +4469,9 @@ func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
 	default:
 		panic(fmt.Sprintf("Unexpected statement of type %T", stmt.Data))
 	}
+
+    // findme
+	// p.print(fmt.Sprintf("/**(end-st-%d)*/", stmt.Loc.Start))
 }
 
 type Options struct {
