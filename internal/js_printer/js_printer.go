@@ -1766,8 +1766,10 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	p.addSourceMapping(expr.Loc)
 	// p.builder.UpdateGeneratedLineAndColumn(p.js)
 
+	var fileName = strings.Split(string(p.js), "\n")[0]
+
 	p.print(fmt.Sprintf("__INST(%d,%d, %s, ", p.builder.GetPrevGeneratedLine(),
-		p.builder.GetPrevGeneratedColumn(), p.builder.GetPrevOriginalName()))
+		p.builder.GetPrevGeneratedColumn(), fileName))
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
