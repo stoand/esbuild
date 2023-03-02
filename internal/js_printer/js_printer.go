@@ -329,6 +329,7 @@ func (p *printer) printJSXTag(tagOrNil js_ast.Expr) {
 }
 
 type printer struct {
+    file				   string
 	symbols                js_ast.SymbolMap
 	isUnbound              func(js_ast.Ref) bool
 	renamer                renamer.Renamer
@@ -1759,17 +1760,9 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 
 	// findme
 	// instrument
-	// p.print(fmt.Sprintf("__INST(%d, null, ", int(expr.Loc.Start)))
-
-	// p.print(fmt.Sprintf("__INST(%07d, null, ", int(expr.Loc.Start)+4*len(p.js)+22-12))
-
 	p.addSourceMapping(expr.Loc)
-	// p.builder.UpdateGeneratedLineAndColumn(p.js)
-
-	var fileName = strings.Split(string(p.js), "\n")[0]
-
-	p.print(fmt.Sprintf("__INST(%d,%d, %s, ", p.builder.GetPrevGeneratedLine(),
-		p.builder.GetPrevGeneratedColumn(), fileName))
+	p.print(fmt.Sprintf("__INST(%d,%d,null,null,'%s',", p.builder.GetOriginalLine(),
+		p.builder.GetOriginalColumn(), p.file))
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
@@ -4548,8 +4541,10 @@ type PrintResult struct {
 	SourceMapChunk sourcemap.Chunk
 }
 
-func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options Options) PrintResult {
+// findme print
+func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options Options, file string) PrintResult {
 	p := &printer{
+    	file: file,
 		symbols:       symbols,
 		renamer:       r,
 		importRecords: tree.ImportRecords,

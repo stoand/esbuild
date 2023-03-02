@@ -4118,7 +4118,7 @@ func (c *linkerContext) generateCodeForFileInChunkJS(
 	tree.Directive = "" // This is handled elsewhere
 	tree.Parts = []js_ast.Part{{Stmts: stmts}}
 	*result = compileResultJS{
-		PrintResult: js_printer.Print(tree, c.graph.Symbols, r, printOptions),
+		PrintResult: js_printer.Print(tree, c.graph.Symbols, r, printOptions, file.InputFile.Source.PrettyPath),
 		sourceIndex: partRange.sourceIndex,
 	}
 
@@ -4435,7 +4435,7 @@ func (c *linkerContext) generateEntryPointTailJS(
 		RequireOrImportMetaForSource: c.requireOrImportMetaForSource,
 		MangledProps:                 c.mangledProps,
 	}
-	result.PrintResult = js_printer.Print(tree, c.graph.Symbols, r, printOptions)
+	result.PrintResult = js_printer.Print(tree, c.graph.Symbols, r, printOptions, file.InputFile.Source.PrettyPath)
 	return
 }
 
@@ -4761,12 +4761,12 @@ func (c *linkerContext) generateChunkJS(chunkIndex int, chunkWaitGroup *sync.Wai
 		crossChunkResult := js_printer.Print(js_ast.AST{
 			ImportRecords: crossChunkImportRecords,
 			Parts:         []js_ast.Part{{Stmts: chunkRepr.crossChunkPrefixStmts}},
-		}, c.graph.Symbols, r, printOptions)
+		}, c.graph.Symbols, r, printOptions, "")
 		crossChunkPrefix = crossChunkResult.JS
 		jsonMetadataImports = crossChunkResult.JSONMetadataImports
 		crossChunkSuffix = js_printer.Print(js_ast.AST{
 			Parts: []js_ast.Part{{Stmts: chunkRepr.crossChunkSuffixStmts}},
-		}, c.graph.Symbols, r, printOptions).JS
+		}, c.graph.Symbols, r, printOptions, "").JS
 	}
 
 	// Generate the exports for the entry point, if there are any
