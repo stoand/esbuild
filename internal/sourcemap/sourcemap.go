@@ -726,6 +726,19 @@ func (b *ChunkBuilder) GenerateChunk(output []byte) Chunk {
 	}
 }
 
+func (b *ChunkBuilder) GetPrevGeneratedLine() int {
+	return b.prevState.GeneratedLine
+}
+
+func (b *ChunkBuilder) GetPrevGeneratedColumn() int {
+	return b.prevState.GeneratedColumn
+}
+
+func (b *ChunkBuilder) GetPrevOriginalName() string {
+	return b.prevOriginalName
+}
+
+
 // Scan over the printed text since the last source mapping and update the
 // generated line and column numbers
 func (b *ChunkBuilder) updateGeneratedLineAndColumn(output []byte) {

@@ -1759,7 +1759,15 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 
 	// findme
 	// instrument
-	p.print(fmt.Sprintf("__INST(%d, null, ", expr.Loc.Start))
+	// p.print(fmt.Sprintf("__INST(%d, null, ", int(expr.Loc.Start)))
+
+	// p.print(fmt.Sprintf("__INST(%07d, null, ", int(expr.Loc.Start)+4*len(p.js)+22-12))
+
+	p.addSourceMapping(expr.Loc)
+	// p.builder.UpdateGeneratedLineAndColumn(p.js)
+
+	p.print(fmt.Sprintf("__INST(%d,%d, %s, ", p.builder.GetPrevGeneratedLine(),
+		p.builder.GetPrevGeneratedColumn(), p.builder.GetPrevOriginalName()))
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
@@ -3372,7 +3380,7 @@ func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
 	p.printNewline()
 
 	// instrument
-	p.print(fmt.Sprintf("__INST(%d, %d);", loc.Start, block.CloseBraceLoc.Start))
+	// p.print(fmt.Sprintf("__INST(%d, %d);", loc.Start, block.CloseBraceLoc.Start))
 	p.printNewline()
 
 	p.options.Indent++
@@ -3707,9 +3715,9 @@ func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
 
 	// findme
 	// p.print(fmt.Sprintf("/**(start-st-%d)*/", stmt.Loc.Start))
-	
+
 	// instrument
-	p.print(fmt.Sprintf("__INST(%d, null);", stmt.Loc.Start))
+	// p.print(fmt.Sprintf("__INST(%d, null);", stmt.Loc.Start))
 
 	switch s := stmt.Data.(type) {
 	case *js_ast.SComment:
