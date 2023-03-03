@@ -1797,7 +1797,16 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 
 	// findme
 	// instrument
-	p.instrumentStart(expr.Loc)
+	enableInstLocal := true
+
+	switch expr.Data.(type) {
+	case *js_ast.EDot:
+		enableInstLocal = false
+	}
+
+	if enableInstLocal {
+		p.instrumentStart(expr.Loc)
+	}
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
@@ -2998,7 +3007,9 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	}
 
 	// findme
-	p.instrumentEnd()
+	if enableInstLocal {
+    	p.instrumentEnd()
+	}
 }
 
 // The handling of binary expressions is convoluted because we're using
