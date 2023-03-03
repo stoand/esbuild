@@ -329,7 +329,7 @@ func (p *printer) printJSXTag(tagOrNil js_ast.Expr) {
 }
 
 type printer struct {
-    file				   string
+	file                   string
 	symbols                js_ast.SymbolMap
 	isUnbound              func(js_ast.Ref) bool
 	renamer                renamer.Renamer
@@ -1756,13 +1756,48 @@ const (
 	parentWasUnaryOrBinary
 )
 
+var enableInst = true
+
+func (p *printer) instrumentStart(start logger.Loc) {
+	isRuntime := p.file == "<runtime>"
+
+	if !isRuntime && enableInst {
+		p.addSourceMapping(start)
+		p.print(fmt.Sprintf("_I(%d,%d,null,null,'%s',", p.builder.GetOriginalLine(),
+			p.builder.GetOriginalColumn(), p.file))
+	}
+}
+
+func (p *printer) instrumentEnd() {
+	isRuntime := p.file == "<runtime>"
+
+	if !isRuntime && enableInst {
+		p.print(")")
+	}
+}
+
+func (p *printer) instrumentRange(start logger.Loc, end logger.Loc) {
+	isRuntime := p.file == "<runtime>"
+
+	if !isRuntime && enableInst {
+		p.addSourceMapping(start)
+		startLine := p.builder.GetOriginalLine()
+		startColumn := p.builder.GetOriginalColumn()
+
+		p.addSourceMapping(end)
+		endLine := p.builder.GetOriginalLine()
+		endColumn := p.builder.GetOriginalColumn()
+
+		p.print(fmt.Sprintf("_I(%d,%d,%d,%d,'%s',", startLine, startColumn, endLine, endColumn, p.file))
+	}
+
+}
+
 func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFlags) {
 
 	// findme
 	// instrument
-	p.addSourceMapping(expr.Loc)
-	p.print(fmt.Sprintf("__INST(%d,%d,null,null,'%s',", p.builder.GetOriginalLine(),
-		p.builder.GetOriginalColumn(), p.file))
+	p.instrumentStart(expr.Loc)
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
 	// operators to inline bitwise operations of cross-module inlined constants.
@@ -2963,8 +2998,7 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	}
 
 	// findme
-	p.print(")")
-	// p.print(fmt.Sprintf("/**(end-ex-%d)*/", expr.Loc.Start))
+	p.instrumentEnd()
 }
 
 // The handling of binary expressions is convoluted because we're using
@@ -3709,10 +3743,17 @@ const (
 func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
 
 	// findme
-	// p.print(fmt.Sprintf("/**(start-st-%d)*/", stmt.Loc.Start))
-
 	// instrument
-	// p.print(fmt.Sprintf("__INST(%d, null);", stmt.Loc.Start))
+
+	// p.addSourceMapping(stmt.Loc)
+
+	// startLine := p.builder.GetOriginalLine()
+	// startCol := p.builder.GetOriginalColumn()
+
+	// p.addSourceMapping(stmt.)
+
+	// p.print(fmt.Sprintf("_I(%d,%d,null,null,'%s', null);", startLine,
+	// 	startCol, p.file))
 
 	switch s := stmt.Data.(type) {
 	case *js_ast.SComment:
@@ -4544,7 +4585,7 @@ type PrintResult struct {
 // findme print
 func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options Options, file string) PrintResult {
 	p := &printer{
-    	file: file,
+		file:          file,
 		symbols:       symbols,
 		renamer:       r,
 		importRecords: tree.ImportRecords,
