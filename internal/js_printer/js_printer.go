@@ -329,7 +329,7 @@ func (p *printer) printJSXTag(tagOrNil js_ast.Expr) {
 }
 
 type printer struct {
-	file                   string
+	fileIndex              int
 	symbols                js_ast.SymbolMap
 	isUnbound              func(js_ast.Ref) bool
 	renamer                renamer.Renamer
@@ -1759,27 +1759,21 @@ const (
 var enableInst = true
 
 func (p *printer) instrumentStart(start logger.Loc) {
-	isRuntime := p.file == "<runtime>"
-
-	if !isRuntime && enableInst {
+	if enableInst {
 		p.addSourceMapping(start)
-		p.print(fmt.Sprintf("_I(%d,%d,null,null,'%s',", p.builder.GetOriginalLine(),
-			p.builder.GetOriginalColumn(), p.file))
+		p.print(fmt.Sprintf("_I(%d,%d,%d,", p.builder.GetOriginalLine(),
+			p.builder.GetOriginalColumn(), p.fileIndex))
 	}
 }
 
 func (p *printer) instrumentEnd() {
-	isRuntime := p.file == "<runtime>"
-
-	if !isRuntime && enableInst {
+	if enableInst {
 		p.print(")")
 	}
 }
 
 func (p *printer) instrumentRange(start logger.Loc, end logger.Loc) {
-	isRuntime := p.file == "<runtime>"
-
-	if !isRuntime && enableInst {
+	if enableInst {
 		p.addSourceMapping(start)
 		startLine := p.builder.GetOriginalLine()
 		startColumn := p.builder.GetOriginalColumn()
@@ -1788,7 +1782,7 @@ func (p *printer) instrumentRange(start logger.Loc, end logger.Loc) {
 		endLine := p.builder.GetOriginalLine()
 		endColumn := p.builder.GetOriginalColumn()
 
-		p.print(fmt.Sprintf("_I(%d,%d,%d,%d,'%s',", startLine, startColumn, endLine, endColumn, p.file))
+		p.print(fmt.Sprintf("_IR(%d,%d,%d,%d,%d);", startLine, startColumn, endLine, endColumn, p.fileIndex))
 	}
 
 }
@@ -3414,15 +3408,15 @@ func (p *printer) printBody(body js_ast.Stmt) {
 }
 
 func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
-	// findme
-	// p.print(fmt.Sprintf("/**{block-st-%d}*/", loc.Start))
 
 	p.addSourceMapping(loc)
 	p.print("{")
 	p.printNewline()
 
+	// findme
 	// instrument
-	// p.print(fmt.Sprintf("__INST(%d, %d);", loc.Start, block.CloseBraceLoc.Start))
+	p.instrumentRange(loc, block.CloseBraceLoc)
+	
 	p.printNewline()
 
 	p.options.Indent++
@@ -4595,10 +4589,15 @@ type PrintResult struct {
 	SourceMapChunk sourcemap.Chunk
 }
 
+var files []string
+
 // findme print
 func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options Options, file string) PrintResult {
+
+    files = append(files, file)
+    
 	p := &printer{
-		file:          file,
+		fileIndex:     len(files),
 		symbols:       symbols,
 		renamer:       r,
 		importRecords: tree.ImportRecords,
@@ -4617,6 +4616,9 @@ func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options
 		noLeadingNewlineHere: -1,
 		builder:              sourcemap.MakeChunkBuilder(options.InputSourceMap, options.LineOffsetTables, options.ASCIIOnly),
 	}
+
+	p.print(fmt.Sprintf("_IFILE_INDEX('%s', %d);", file, len(files)))
+	p.printNewline()
 
 	if p.exprComments != nil {
 		p.printedExprComments = make(map[logger.Loc]bool)
