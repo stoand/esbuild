@@ -330,6 +330,7 @@ func (p *printer) printJSXTag(tagOrNil js_ast.Expr) {
 
 type printer struct {
 	fileIndex              int
+	isRuntime              bool
 	symbols                js_ast.SymbolMap
 	isUnbound              func(js_ast.Ref) bool
 	renamer                renamer.Renamer
@@ -1759,7 +1760,7 @@ const (
 var enableInst = true
 
 func (p *printer) instrumentStart(start logger.Loc) {
-	if enableInst {
+	if enableInst && !p.isRuntime {
 		p.addSourceMapping(start)
 		p.print(fmt.Sprintf("_I(%d,%d,%d,", p.builder.GetOriginalLine(),
 			p.builder.GetOriginalColumn(), p.fileIndex))
@@ -1767,13 +1768,13 @@ func (p *printer) instrumentStart(start logger.Loc) {
 }
 
 func (p *printer) instrumentEnd() {
-	if enableInst {
+	if enableInst && !p.isRuntime {
 		p.print(")")
 	}
 }
 
 func (p *printer) instrumentRange(start logger.Loc, end logger.Loc) {
-	if enableInst {
+	if enableInst && !p.isRuntime {
 		p.addSourceMapping(start)
 		startLine := p.builder.GetOriginalLine()
 		startColumn := p.builder.GetOriginalColumn()
@@ -4598,6 +4599,7 @@ func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options
     
 	p := &printer{
 		fileIndex:     len(files),
+		isRuntime:     file == "<runtime>",
 		symbols:       symbols,
 		renamer:       r,
 		importRecords: tree.ImportRecords,
