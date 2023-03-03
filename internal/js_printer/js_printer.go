@@ -1802,6 +1802,8 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	switch expr.Data.(type) {
 	case *js_ast.EDot:
 		enableInstLocal = false
+	case *js_ast.EIdentifier:
+		enableInstLocal = false
 	}
 
 	if enableInstLocal {
