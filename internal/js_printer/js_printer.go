@@ -331,6 +331,8 @@ func (p *printer) printJSXTag(tagOrNil js_ast.Expr) {
 type printer struct {
 	fileIndex              int
 	isRuntime              bool
+	instrumentedExpr       []InstrumentedExpr
+	instrumentedBlock      []InstrumentedBlock
 	symbols                js_ast.SymbolMap
 	isUnbound              func(js_ast.Ref) bool
 	renamer                renamer.Renamer
@@ -1759,21 +1761,24 @@ const (
 
 var enableInst = true
 
-func (p *printer) instrumentStart(start logger.Loc) {
+func (p *printer) instrumentExprStart(start logger.Loc) {
 	if enableInst && !p.isRuntime {
 		p.addSourceMapping(start)
-		p.print(fmt.Sprintf("_I(%d,%d,%d,", p.builder.GetOriginalLine(),
-			p.builder.GetOriginalColumn(), p.fileIndex))
+		startLine := p.builder.GetOriginalLine()
+		startColumn := p.builder.GetOriginalColumn()
+
+		p.print(fmt.Sprintf("_IE(%d,%d,%d,", startLine, startColumn, p.fileIndex))
+		p.instrumentedExpr = append(p.instrumentedExpr, InstrumentedExpr{startLine, startColumn})
 	}
 }
 
-func (p *printer) instrumentEnd() {
+func (p *printer) instrumentExprEnd() {
 	if enableInst && !p.isRuntime {
 		p.print(")")
 	}
 }
 
-func (p *printer) instrumentRange(start logger.Loc, end logger.Loc) {
+func (p *printer) instrumentBlock(start logger.Loc, end logger.Loc) {
 	if enableInst && !p.isRuntime {
 		p.addSourceMapping(start)
 		startLine := p.builder.GetOriginalLine()
@@ -1783,7 +1788,10 @@ func (p *printer) instrumentRange(start logger.Loc, end logger.Loc) {
 		endLine := p.builder.GetOriginalLine()
 		endColumn := p.builder.GetOriginalColumn()
 
-		p.print(fmt.Sprintf("_IR(%d,%d,%d,%d,%d);", startLine, startColumn, endLine, endColumn, p.fileIndex))
+		p.print(fmt.Sprintf("_IB(%d,%d,%d,%d,%d);", startLine, startColumn, endLine, endColumn, p.fileIndex))
+		
+		p.instrumentedBlock = append(p.instrumentedBlock,
+    		InstrumentedBlock{startLine, startColumn, endLine, endColumn})
 	}
 
 }
@@ -1802,7 +1810,7 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	}
 
 	if enableInstLocal {
-		p.instrumentStart(expr.Loc)
+		p.instrumentExprStart(expr.Loc)
 	}
 
 	// If syntax compression is enabled, do a pre-pass over unary and binary
@@ -3005,7 +3013,7 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 
 	// findme
 	if enableInstLocal {
-    	p.instrumentEnd()
+		p.instrumentExprEnd()
 	}
 }
 
@@ -3416,8 +3424,8 @@ func (p *printer) printBlock(loc logger.Loc, block js_ast.SBlock) {
 
 	// findme
 	// instrument
-	p.instrumentRange(loc, block.CloseBraceLoc)
-	
+	p.instrumentBlock(loc, block.CloseBraceLoc)
+
 	p.printNewline()
 
 	p.options.Indent++
@@ -4592,20 +4600,34 @@ type PrintResult struct {
 
 var files []string
 
+type InstrumentedExpr struct {
+	startLine   int
+	startColumn int
+}
+
+type InstrumentedBlock struct {
+	startLine   int
+	startColumn int
+	endLine     int
+	endColumn   int
+}
+
 // findme print
 func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options Options, file string) PrintResult {
 
-    files = append(files, file)
-    
+	files = append(files, file)
+
 	p := &printer{
-		fileIndex:     len(files),
-		isRuntime:     file == "<runtime>",
-		symbols:       symbols,
-		renamer:       r,
-		importRecords: tree.ImportRecords,
-		options:       options,
-		moduleType:    tree.ModuleTypeData.Type,
-		exprComments:  tree.ExprComments,
+		fileIndex:         len(files),
+		isRuntime:         file == "<runtime>",
+		instrumentedExpr:  []InstrumentedExpr{},
+		instrumentedBlock: []InstrumentedBlock{},
+		symbols:           symbols,
+		renamer:           r,
+		importRecords:     tree.ImportRecords,
+		options:           options,
+		moduleType:        tree.ModuleTypeData.Type,
+		exprComments:      tree.ExprComments,
 
 		stmtStart:          -1,
 		exportDefaultStart: -1,
@@ -4645,6 +4667,23 @@ func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options
 			p.printSemicolonIfNeeded()
 		}
 	}
+
+    p.printNewline()
+	p.print(fmt.Sprintf("global._IAVAILABLE(%d, [", p.fileIndex))
+    p.printNewline()
+
+	for _, expr := range p.instrumentedExpr {
+    	p.print(fmt.Sprintf("[%d,%d],", expr.startLine, expr.startColumn))
+    	p.printNewline()
+	}
+
+	for _, block := range p.instrumentedBlock {
+    	p.print(fmt.Sprintf("[%d,%d,%d,%d],", block.startLine, block.startColumn, block.endLine, block.endColumn))
+    	p.printNewline()
+	}
+	
+	p.print(fmt.Sprintf("]);"))
+    p.printNewline()
 
 	result := PrintResult{
 		JS:                     p.js,
