@@ -1767,7 +1767,7 @@ func (p *printer) instrumentExprStart(start logger.Loc) {
 		startLine := p.builder.GetOriginalLine()
 		startColumn := p.builder.GetOriginalColumn()
 
-		p.print(fmt.Sprintf("_IE(%d,%d,%d,", startLine, startColumn, p.fileIndex))
+		p.print(fmt.Sprintf("_IR(_IE(%d,%d,%d),", startLine, startColumn, p.fileIndex))
 		p.instrumentedExpr = append(p.instrumentedExpr, InstrumentedExpr{startLine, startColumn})
 	}
 }
