@@ -1807,6 +1807,8 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 		enableInstLocal = false
 	case *js_ast.EIdentifier:
 		enableInstLocal = false
+	case *js_ast.EIndex:
+		enableInstLocal = false
 	}
 
 	if enableInstLocal {
