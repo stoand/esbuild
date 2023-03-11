@@ -1757,6 +1757,7 @@ const (
 	isDeleteTarget
 	isCallTargetOrTemplateTag
 	parentWasUnaryOrBinary
+	parentWasNew
 )
 
 var enableInst = true
@@ -1808,6 +1809,10 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 	case *js_ast.EIdentifier:
 		enableInstLocal = false
 	case *js_ast.EIndex:
+		enableInstLocal = false
+	}
+
+	if flags == forbidCall {
 		enableInstLocal = false
 	}
 
