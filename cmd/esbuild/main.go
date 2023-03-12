@@ -119,6 +119,7 @@ var helpText = func(colors logger.Colors) string {
   --sourcemap=external      Do not link to the source map with a comment
   --sourcemap=inline        Emit the source map with an inline data URL
   --sources-content=false   Omit "sourcesContent" in generated source maps
+  --instrument=false        Generate instrumentation
   --supported:F=...         Consider syntax F to be supported (true | false)
   --tree-shaking=...        Force tree shaking on or off (false | true)
   --tsconfig=...            Use this tsconfig.json file instead of other ones

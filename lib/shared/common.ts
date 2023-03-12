@@ -135,6 +135,7 @@ function pushCommonFlags(flags: string[], options: CommonOptions, keys: OptionKe
   let legalComments = getFlag(options, keys, 'legalComments', mustBeString)
   let sourceRoot = getFlag(options, keys, 'sourceRoot', mustBeString)
   let sourcesContent = getFlag(options, keys, 'sourcesContent', mustBeBoolean)
+  let instrument = getFlag(options, keys, 'instrument', mustBeBoolean)
   let target = getFlag(options, keys, 'target', mustBeStringOrArray)
   let format = getFlag(options, keys, 'format', mustBeString)
   let globalName = getFlag(options, keys, 'globalName', mustBeString)
@@ -165,6 +166,7 @@ function pushCommonFlags(flags: string[], options: CommonOptions, keys: OptionKe
   if (legalComments) flags.push(`--legal-comments=${legalComments}`)
   if (sourceRoot !== void 0) flags.push(`--source-root=${sourceRoot}`)
   if (sourcesContent !== void 0) flags.push(`--sources-content=${sourcesContent}`)
+  if (instrument !== void 0) flags.push(`--instrument=${instrument}`)
   if (target) {
     if (Array.isArray(target)) flags.push(`--target=${Array.from(target).map(validateTarget).join(',')}`)
     else flags.push(`--target=${validateTarget(target)}`)

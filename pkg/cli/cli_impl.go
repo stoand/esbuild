@@ -289,6 +289,23 @@ func parseOptionsImpl(
 				}
 			}
 
+		case isBoolFlag(arg, "--instrument"):
+			if value, err := parseBoolFlag(arg, true); err != nil {
+				return parseOptionsExtras{}, err
+			} else {
+				var instrument *api.Instrument
+				if buildOpts != nil {
+					instrument = &buildOpts.Instrument
+				} else {
+					instrument = &transformOpts.Instrument
+				}
+				if value {
+					*instrument = api.InstrumentTrue
+				} else {
+					*instrument = api.InstrumentFalse
+				}
+			}
+
 		case isBoolFlag(arg, "--ignore-annotations"):
 			if value, err := parseBoolFlag(arg, true); err != nil {
 				return parseOptionsExtras{}, err
@@ -855,6 +872,7 @@ func parseOptionsImpl(
 				"sourcefile":         true,
 				"sourcemap":          true,
 				"sources-content":    true,
+				"instrument":         true,
 				"splitting":          true,
 				"target":             true,
 				"tree-shaking":       true,
