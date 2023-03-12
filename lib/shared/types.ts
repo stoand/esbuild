@@ -14,7 +14,7 @@ interface CommonOptions {
   sourceRoot?: string
   /** Documentation: https://esbuild.github.io/api/#sources-content */
   sourcesContent?: boolean
-  // TODO document
+  /** Documentation: https://esbuild.github.io/api/#instrument */
   instrument?: boolean
   /** Documentation: https://esbuild.github.io/api/#format */
   format?: Format
