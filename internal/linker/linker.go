@@ -4093,6 +4093,7 @@ func (c *linkerContext) generateCodeForFileInChunkJS(
 
 	// Convert the AST to JavaScript code
 	printOptions := js_printer.Options{
+    	Instrument:					  c.options.Instrument,
 		Indent:                       indent,
 		OutputFormat:                 c.options.OutputFormat,
 		MinifyIdentifiers:            c.options.MinifyIdentifiers,
@@ -4114,6 +4115,9 @@ func (c *linkerContext) generateCodeForFileInChunkJS(
 		MangledProps:                 c.mangledProps,
 		NeedsMetafile:                c.options.NeedsMetafile,
 	}
+
+	fmt.Printf("%b is active", c.options.Instrument)
+	
 	tree := repr.AST
 	tree.Directive = "" // This is handled elsewhere
 	tree.Parts = []js_ast.Part{{Stmts: stmts}}

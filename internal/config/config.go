@@ -350,6 +350,7 @@ type Options struct {
 	KeepNames               bool
 	IgnoreDCEAnnotations    bool
 	TreeShaking             bool
+	Instrument              bool
 	DropDebugger            bool
 	MangleQuoted            bool
 	Platform                Platform

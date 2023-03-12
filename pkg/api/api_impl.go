@@ -232,6 +232,19 @@ func validateTreeShaking(value TreeShaking, bundle bool, format Format) bool {
 	}
 }
 
+func validateInstrument(value Instrument) bool {
+	switch value {
+	case InstrumentDefault:
+    	return false
+	case InstrumentFalse:
+		return false
+	case InstrumentTrue:
+		return true
+	default:
+		panic("Invalid tree shaking")
+	}
+}
+
 func validateLoader(value Loader) config.Loader {
 	switch value {
 	case LoaderBase64:
@@ -1229,6 +1242,7 @@ func validateBuildOptions(
 		ASCIIOnly:             validateASCIIOnly(buildOpts.Charset),
 		IgnoreDCEAnnotations:  buildOpts.IgnoreAnnotations,
 		TreeShaking:           validateTreeShaking(buildOpts.TreeShaking, buildOpts.Bundle, buildOpts.Format),
+		Instrument:            validateInstrument(buildOpts.Instrument),
 		GlobalName:            validateGlobalName(log, buildOpts.GlobalName),
 		CodeSplitting:         buildOpts.Splitting,
 		OutputFormat:          validateFormat(buildOpts.Format),

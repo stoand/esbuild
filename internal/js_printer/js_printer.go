@@ -4553,6 +4553,8 @@ func (p *printer) printStmt(stmt js_ast.Stmt, flags printStmtFlags) {
 }
 
 type Options struct {
+    Instrument bool
+    
 	RequireOrImportMetaForSource func(uint32) RequireOrImportMeta
 
 	// Cross-module inlining of TypeScript enums is actually done during printing
