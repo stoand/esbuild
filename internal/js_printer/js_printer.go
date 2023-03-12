@@ -1812,9 +1812,12 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 		enableInstLocal = false
 	}
 
-	if flags == forbidCall {
+	if flags & parentWasNew != 0 {
 		enableInstLocal = false
 	}
+
+    // clear parentWasNew bit
+	flags = flags&^parentWasNew;
 
 	if enableInstLocal {
 		p.instrumentExprStart(expr.Loc)
@@ -2082,7 +2085,7 @@ func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFla
 		p.addSourceMapping(expr.Loc)
 		p.print("new")
 		p.printSpace()
-		p.printExpr(e.Target, js_ast.LNew, forbidCall)
+		p.printExpr(e.Target, js_ast.LNew, forbidCall | parentWasNew)
 
 		// Omit the "()" when minifying, but only when safe to do so
 		isMultiLine := !p.options.MinifyWhitespace && ((e.IsMultiLine && len(e.Args) > 0) ||
@@ -4626,6 +4629,7 @@ func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options
 
 	p := &printer{
 		fileIndex:         len(files),
+		// isRuntime:         file == "<runtime>" || strings.Contains(file, "node_modules"),
 		isRuntime:         file == "<runtime>",
 		instrumentedExpr:  []InstrumentedExpr{},
 		instrumentedBlock: []InstrumentedBlock{},
