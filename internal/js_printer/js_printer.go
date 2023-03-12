@@ -1760,10 +1760,8 @@ const (
 	parentWasNew
 )
 
-var enableInst = true
-
 func (p *printer) instrumentExprStart(start logger.Loc) {
-	if enableInst && !p.isRuntime {
+	if p.options.Instrument && !p.isRuntime {
 		p.addSourceMapping(start)
 		startLine := p.builder.GetOriginalLine()
 		startColumn := p.builder.GetOriginalColumn()
@@ -1774,13 +1772,13 @@ func (p *printer) instrumentExprStart(start logger.Loc) {
 }
 
 func (p *printer) instrumentExprEnd() {
-	if enableInst && !p.isRuntime {
+	if p.options.Instrument && !p.isRuntime {
 		p.print(")")
 	}
 }
 
 func (p *printer) instrumentBlock(start logger.Loc, end logger.Loc) {
-	if enableInst && !p.isRuntime {
+	if p.options.Instrument && !p.isRuntime {
 		p.addSourceMapping(start)
 		startLine := p.builder.GetOriginalLine()
 		startColumn := p.builder.GetOriginalColumn()
@@ -1799,7 +1797,6 @@ func (p *printer) instrumentBlock(start logger.Loc, end logger.Loc) {
 
 func (p *printer) printExpr(expr js_ast.Expr, level js_ast.L, flags printExprFlags) {
 
-	// findme
 	// instrument
 	enableInstLocal := true
 
@@ -4654,8 +4651,10 @@ func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options
 		builder:              sourcemap.MakeChunkBuilder(options.InputSourceMap, options.LineOffsetTables, options.ASCIIOnly),
 	}
 
-	p.print(fmt.Sprintf("_IFILE_INDEX('%s', %d);", file, len(files)))
-	p.printNewline()
+    if p.options.Instrument {
+    	p.print(fmt.Sprintf("_IFILE_INDEX('%s', %d);", file, len(files)))
+    	p.printNewline()
+    }
 
 	if p.exprComments != nil {
 		p.printedExprComments = make(map[logger.Loc]bool)
@@ -4681,22 +4680,23 @@ func Print(tree js_ast.AST, symbols js_ast.SymbolMap, r renamer.Renamer, options
 		}
 	}
 
-    p.printNewline()
-	p.print(fmt.Sprintf("global._IAVAILABLE(%d, [", p.fileIndex))
-    p.printNewline()
+    if p.options.Instrument {
+    	p.print(fmt.Sprintf("global._IAVAILABLE(%d, [", p.fileIndex))
+        p.printNewline()
 
-	for _, expr := range p.instrumentedExpr {
-    	p.print(fmt.Sprintf("[%d,%d],", expr.startLine, expr.startColumn))
-    	p.printNewline()
-	}
+    	for _, expr := range p.instrumentedExpr {
+        	p.print(fmt.Sprintf("[%d,%d],", expr.startLine, expr.startColumn))
+        	p.printNewline()
+    	}
 
-	for _, block := range p.instrumentedBlock {
-    	p.print(fmt.Sprintf("[%d,%d,%d,%d],", block.startLine, block.startColumn, block.endLine, block.endColumn))
-    	p.printNewline()
-	}
-	
-	p.print(fmt.Sprintf("]);"))
-    p.printNewline()
+    	for _, block := range p.instrumentedBlock {
+        	p.print(fmt.Sprintf("[%d,%d,%d,%d],", block.startLine, block.startColumn, block.endLine, block.endColumn))
+        	p.printNewline()
+    	}
+    	
+    	p.print(fmt.Sprintf("]);"))
+        p.printNewline()
+    }
 
 	result := PrintResult{
 		JS:                     p.js,

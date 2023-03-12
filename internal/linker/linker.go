@@ -4115,8 +4115,6 @@ func (c *linkerContext) generateCodeForFileInChunkJS(
 		MangledProps:                 c.mangledProps,
 		NeedsMetafile:                c.options.NeedsMetafile,
 	}
-
-	fmt.Printf("%b is active", c.options.Instrument)
 	
 	tree := repr.AST
 	tree.Directive = "" // This is handled elsewhere
